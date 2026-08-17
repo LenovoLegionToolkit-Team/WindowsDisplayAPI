@@ -21,6 +21,24 @@ dotnet add package LLT.WindowsDisplayAPI
 
 For more details, visit the [LLT.WindowsDisplayAPI NuGet Page](https://www.nuget.org/packages/LLT.WindowsDisplayAPI).
 
+## Features & Windows API Support
+
+| Feature / Interface | Subsystem / Flag | Status | Description |
+|---|---|---|---|
+| **Display Topologies & Modes** | CCD (`Clone`, `Extend`, `Internal`, `External`) | Supported | Full topology querying, path switching, and validation. |
+| **Resolution & Refresh Rates** | CCD (Standard) | Supported | Custom resolutions, progressive/interlaced refresh rate rationales. |
+| **Dynamic Refresh Rate (DRR)** | CCD (`BoostRefreshRate`, `VirtualRefreshRateAware`) | Supported | Full support for Windows 11 Dynamic Refresh Rate boost paths. |
+| **DPI Scaling** | CCD (`GetSourceDPIScale`, `SetSourceDPIScale`) | Supported | Per-source DPI scale percentage reading and modification. |
+| **Virtual Resolution** | CCD (`Get/SetSupportVirtualResolution`) | Supported | Virtual mode and virtual resolution configuration. |
+| **HDR / Advanced Color Info** | CCD (`GET_ADVANCED_COLOR_INFO` = 9) | In Progress (In LLT) | Query HDR and Wide Color Gamut (WCG) capability and active state. |
+| **HDR State Control** | CCD (`SET_ADVANCED_COLOR_STATE` = 10/14) | In Progress (In LLT) | Programmatically toggle HDR on/off per display. |
+| **SDR White Level in HDR** | CCD (`GET_SDR_WHITE_LEVEL` = 11) | Planned | Read SDR content brightness slider value (nits) in HDR mode. |
+| **Monitor Specialization** | CCD (`GET/SET_MONITOR_SPECIALIZATION` = 12/13) | Planned | Check or configure specialized displays (HMD / VR / Medical panels). |
+| **Advanced Color Primaries** | CCD (`GET_ADVANCED_COLOR_INFO_2` = 15) | Planned | Retrieve color gamut chromaticity coordinates and peak luminance. |
+| **DDC/CI Hardware Controls** | DXVA2 (`dxva2.dll`) | Planned | External monitor hardware brightness, contrast, and VCP inputs. |
+| **DXGI Hardware Color Metrics** | DXGI (`DXGI_OUTPUT_DESC1`) | Planned | Real panel peak luminance (nits), bit depth, and color space gamut. |
+| **Windows Color Management** | WCS / ICM (`mscms.dll`) | Planned | Query and assign ICC/ICM color profiles per display. |
+
 ## Sponsorship & Funding
 
 If you find this library useful, please consider supporting the project and its authors:
