@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using WindowsDisplayAPI.Native.Structures;
 
@@ -53,6 +53,26 @@ namespace WindowsDisplayAPI.Native.DisplayConfig.Structures
             else if (requestType == typeof(DisplayConfigSupportVirtualResolution))
             {
                 // do nothing
+            }
+            else if (requestType == typeof(DisplayConfigGetAdvancedColorInfo))
+            {
+                Type = DisplayConfigDeviceInfoType.GetAdvancedColorInfo;
+            }
+            else if (requestType == typeof(DisplayConfigSetAdvancedColorState))
+            {
+                Type = DisplayConfigDeviceInfoType.SetAdvancedColorState;
+            }
+            else if (requestType == typeof(DisplayConfigGetSdrWhiteLevel))
+            {
+                Type = DisplayConfigDeviceInfoType.GetSdrWhiteLevel;
+            }
+            else if (requestType == typeof(DisplayConfigGetAdvancedColorInfo2))
+            {
+                Type = DisplayConfigDeviceInfoType.GetAdvancedColorInfo2;
+            }
+            else if (requestType == typeof(DisplayConfigSetHdrState))
+            {
+                Type = DisplayConfigDeviceInfoType.SetHdrState;
             }
 
             // throw exception?

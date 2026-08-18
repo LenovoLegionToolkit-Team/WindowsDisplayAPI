@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using WindowsDisplayAPI.Native.DisplayConfig;
 using WindowsDisplayAPI.Native.DisplayConfig.Structures;
@@ -43,6 +43,21 @@ namespace WindowsDisplayAPI.Native
         );
 
         [DllImport("user32")]
+        public static extern Win32Status DisplayConfigGetDeviceInfo(
+            ref DisplayConfigGetAdvancedColorInfo advancedColorInfo
+        );
+
+        [DllImport("user32")]
+        public static extern Win32Status DisplayConfigGetDeviceInfo(
+            ref DisplayConfigGetAdvancedColorInfo2 advancedColorInfo2
+        );
+
+        [DllImport("user32")]
+        public static extern Win32Status DisplayConfigGetDeviceInfo(
+            ref DisplayConfigGetSdrWhiteLevel sdrWhiteLevel
+        );
+
+        [DllImport("user32")]
         public static extern Win32Status DisplayConfigSetDeviceInfo(
             ref DisplayConfigSetTargetPersistence targetPersistence
         );
@@ -55,6 +70,16 @@ namespace WindowsDisplayAPI.Native
         [DllImport("user32")]
         public static extern Win32Status DisplayConfigSetDeviceInfo(
             ref DisplayConfigSetSourceDPIScale setSourceDpiScale
+        );
+
+        [DllImport("user32")]
+        public static extern Win32Status DisplayConfigSetDeviceInfo(
+            ref DisplayConfigSetAdvancedColorState setAdvancedColorState
+        );
+
+        [DllImport("user32")]
+        public static extern Win32Status DisplayConfigSetDeviceInfo(
+            ref DisplayConfigSetHdrState setHdrState
         );
 
         [DllImport("user32")]

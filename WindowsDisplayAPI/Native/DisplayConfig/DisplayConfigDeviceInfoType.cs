@@ -1,4 +1,4 @@
-﻿namespace WindowsDisplayAPI.Native.DisplayConfig
+namespace WindowsDisplayAPI.Native.DisplayConfig
 {
     internal enum DisplayConfigDeviceInfoType
     {
@@ -11,6 +11,14 @@
         SetTargetPersistence = 5,
         GetTargetBaseType = 6,
         GetSupportVirtualResolution = 7,
-        SetSupportVirtualResolution = 8
+        SetSupportVirtualResolution = 8,
+        GetAdvancedColorInfo = 9,
+        SetAdvancedColorState = 10,
+        GetSdrWhiteLevel = 11,
+        GetMonitorSpecialization = 12,
+        SetMonitorSpecialization = 13,
+        SetReserved1 = 14,
+        GetAdvancedColorInfo2 = 15,
+        SetHdrState = 16
     }
 }

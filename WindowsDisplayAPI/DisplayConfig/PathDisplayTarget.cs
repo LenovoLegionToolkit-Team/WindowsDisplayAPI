@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -339,6 +339,141 @@ namespace WindowsDisplayAPI.DisplayConfig
                     throw new Win32Exception((int) result);
                 }
             }
+        }
+
+        /// <summary>
+        ///     Gets the Advanced Color (HDR / WCG) information for this display target.
+        /// </summary>
+        /// <returns>An instance of <see cref="DisplayAdvancedColorInfo"/> containing the capabilities and current state.</returns>
+        /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
+        /// <exception cref="Win32Exception">Win32 error occurred querying device info.</exception>
+        public DisplayAdvancedColorInfo GetAdvancedColorInfo()
+        {
+            if (!IsAvailable)
+            {
+                throw new TargetNotAvailableException("Extra information about the target is not available.",
+                    Adapter.AdapterId, TargetId);
+            }
+
+            var colorInfo2 = new DisplayConfigGetAdvancedColorInfo2(Adapter.AdapterId, TargetId);
+            var result2 = DisplayConfigApi.DisplayConfigGetDeviceInfo(ref colorInfo2);
+
+            if (result2 == Win32Status.Success)
+            {
+                var hdrSupported = colorInfo2.HighDynamicRangeSupported;
+                var wideColorEnforced = colorInfo2.AdvancedColorLimitedByPolicy;
+                var advancedColorForceDisabled = false;
+                var advancedColorEnabled = hdrSupported && colorInfo2.ActiveColorMode == DisplayConfigAdvancedColorMode.Hdr;
+
+                return new DisplayAdvancedColorInfo(
+                    hdrSupported,
+                    advancedColorEnabled,
+                    wideColorEnforced,
+                    advancedColorForceDisabled,
+                    colorInfo2.ColorEncoding,
+                    colorInfo2.BitsPerColorChannel,
+                    colorInfo2.ActiveColorMode
+                );
+            }
+
+            var colorInfo = new DisplayConfigGetAdvancedColorInfo(Adapter.AdapterId, TargetId);
+            var result = DisplayConfigApi.DisplayConfigGetDeviceInfo(ref colorInfo);
+
+            if (result == Win32Status.Success)
+            {
+                var activeColorMode = colorInfo.AdvancedColorEnabled
+                    ? DisplayConfigAdvancedColorMode.Hdr
+                    : DisplayConfigAdvancedColorMode.Sdr;
+
+                return new DisplayAdvancedColorInfo(
+                    colorInfo.AdvancedColorSupported,
+                    colorInfo.AdvancedColorEnabled,
+                    colorInfo.WideColorEnforced,
+                    colorInfo.AdvancedColorForceDisabled,
+                    colorInfo.ColorEncoding,
+                    colorInfo.BitsPerColorChannel,
+                    activeColorMode
+                );
+            }
+
+            throw new Win32Exception((int) result);
+        }
+
+        /// <summary>
+        ///     Sets the Advanced Color / HDR state for this display target.
+        /// </summary>
+        /// <param name="enable">true to enable HDR/Advanced Color; false to disable.</param>
+        /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
+        /// <exception cref="Win32Exception">Win32 error occurred setting device info.</exception>
+        public void SetAdvancedColorState(bool enable)
+        {
+            if (!IsAvailable)
+            {
+                throw new TargetNotAvailableException("Extra information about the target is not available.",
+                    Adapter.AdapterId, TargetId);
+            }
+
+            var setHdrState = new DisplayConfigSetHdrState(Adapter.AdapterId, TargetId, enable);
+            var resultHdr = DisplayConfigApi.DisplayConfigSetDeviceInfo(ref setHdrState);
+
+            if (resultHdr == Win32Status.Success)
+            {
+                return;
+            }
+
+            var setColorState = new DisplayConfigSetAdvancedColorState(Adapter.AdapterId, TargetId, enable);
+            var resultColor = DisplayConfigApi.DisplayConfigSetDeviceInfo(ref setColorState);
+
+            if (resultColor != Win32Status.Success)
+            {
+                throw new Win32Exception((int) resultColor);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the HDR state for this display target. Alias for <see cref="SetAdvancedColorState"/>.
+        /// </summary>
+        /// <param name="enable">true to enable HDR; false to disable.</param>
+        /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
+        /// <exception cref="Win32Exception">Win32 error occurred setting device info.</exception>
+        public void SetHdrState(bool enable)
+        {
+            SetAdvancedColorState(enable);
+        }
+
+        /// <summary>
+        ///     Gets the current SDR white level for this display target (raw value in 1/1000th of 80 nits).
+        /// </summary>
+        /// <returns>The raw SDR white level.</returns>
+        /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
+        /// <exception cref="Win32Exception">Win32 error occurred querying device info.</exception>
+        public uint GetSdrWhiteLevel()
+        {
+            if (!IsAvailable)
+            {
+                throw new TargetNotAvailableException("Extra information about the target is not available.",
+                    Adapter.AdapterId, TargetId);
+            }
+
+            var sdrWhiteLevel = new DisplayConfigGetSdrWhiteLevel(Adapter.AdapterId, TargetId);
+            var result = DisplayConfigApi.DisplayConfigGetDeviceInfo(ref sdrWhiteLevel);
+
+            if (result == Win32Status.Success)
+            {
+                return sdrWhiteLevel.SdrWhiteLevel;
+            }
+
+            throw new Win32Exception((int) result);
+        }
+
+        /// <summary>
+        ///     Gets the current SDR white level in nits (calculated as (SdrWhiteLevel / 1000.0) * 80.0).
+        /// </summary>
+        /// <returns>The SDR white level in nits.</returns>
+        public float GetSdrWhiteLevelInNits()
+        {
+            var raw = GetSdrWhiteLevel();
+            return (raw / 1000.0f) * 80.0f;
         }
 
         /// <inheritdoc />
