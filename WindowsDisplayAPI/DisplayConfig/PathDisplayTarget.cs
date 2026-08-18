@@ -361,8 +361,8 @@ namespace WindowsDisplayAPI.DisplayConfig
             if (result2 == Win32Status.Success)
             {
                 var hdrSupported = colorInfo2.HighDynamicRangeSupported;
-                var wideColorEnforced = colorInfo2.AdvancedColorLimitedByPolicy;
-                var advancedColorForceDisabled = false;
+                var wideColorEnforced = false;
+                var advancedColorForceDisabled = colorInfo2.AdvancedColorLimitedByPolicy;
                 var advancedColorEnabled = hdrSupported && colorInfo2.ActiveColorMode == DisplayConfigAdvancedColorMode.Hdr;
 
                 return new DisplayAdvancedColorInfo(
