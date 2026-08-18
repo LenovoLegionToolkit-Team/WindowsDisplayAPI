@@ -836,6 +836,7 @@ namespace WindowsDisplayAPI.DisplayConfig
 
                 if (isVirtualSupported &&
                     displayPath.SourceInfo.SourceModeInfoIndex != DisplayConfigSourceMode.InvalidSourceModeIndex &&
+                    displayPath.SourceInfo.SourceModeInfoIndex < displayModes.Length &&
                     displayModes[displayPath.SourceInfo.SourceModeInfoIndex].InfoType ==
                     DisplayConfigModeInfoType.Source)
                 {
@@ -844,6 +845,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                 }
                 else if (!isVirtualSupported &&
                          displayPath.SourceInfo.ModeInfoIndex != DisplayConfigModeInfo.InvalidModeIndex &&
+                         displayPath.SourceInfo.ModeInfoIndex < displayModes.Length &&
                          displayModes[displayPath.SourceInfo.ModeInfoIndex].InfoType ==
                          DisplayConfigModeInfoType.Source)
                 {
@@ -878,6 +880,7 @@ namespace WindowsDisplayAPI.DisplayConfig
 
                 if (isVirtualSupported &&
                     displayPath.TargetInfo.TargetModeInfoIndex != DisplayConfigTargetMode.InvalidTargetModeIndex &&
+                    displayPath.TargetInfo.TargetModeInfoIndex < displayModes.Length &&
                     displayModes[displayPath.TargetInfo.TargetModeInfoIndex].InfoType == DisplayConfigModeInfoType.Target
                 )
                 {
@@ -885,6 +888,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                 }
                 else if (!isVirtualSupported &&
                          displayPath.TargetInfo.ModeInfoIndex != DisplayConfigModeInfo.InvalidModeIndex &&
+                         displayPath.TargetInfo.ModeInfoIndex < displayModes.Length &&
                          displayModes[displayPath.TargetInfo.ModeInfoIndex].InfoType == DisplayConfigModeInfoType.Target
                 )
                 {
@@ -896,6 +900,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                 if (isVirtualSupported &&
                     displayPath.TargetInfo.DesktopModeInfoIndex !=
                     DisplayConfigDesktopImageInfo.InvalidDesktopImageModeIndex &&
+                    displayPath.TargetInfo.DesktopModeInfoIndex < displayModes.Length &&
                     displayModes[displayPath.TargetInfo.DesktopModeInfoIndex].InfoType ==
                     DisplayConfigModeInfoType.DesktopImage)
                 {
