@@ -129,6 +129,7 @@ namespace WindowsDisplayAPI.DisplayConfig
         /// <param name="scaling">Display scaling</param>
         /// <param name="isVirtualModeSupported">A boolean value indicating the target virtual mode support</param>
         /// <param name="isBoostRefreshRate">A boolean value indicating if dynamic refresh rate boost is enabled</param>
+        /// <param name="virtualFrequencyInMillihertz">The virtual frequency in millihertz</param>
         public PathTargetInfo(
             PathDisplayTarget displayTarget,
             PathTargetSignalInfo signalInfo,
@@ -281,6 +282,24 @@ namespace WindowsDisplayAPI.DisplayConfig
         ///     Gets the type of the display device connection
         /// </summary>
         public DisplayConfigVideoOutputTechnology OutputTechnology { get; } = DisplayConfigVideoOutputTechnology.Other;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output device connects internally to a display device
+        /// </summary>
+        public bool IsInternal => OutputTechnology == DisplayConfigVideoOutputTechnology.Internal ||
+                                  OutputTechnology == DisplayConfigVideoOutputTechnology.DisplayPortEmbedded ||
+                                  OutputTechnology == DisplayConfigVideoOutputTechnology.UDIEmbedded;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an external DisplayPort
+        /// </summary>
+        public bool IsExternalDisplayPort => OutputTechnology == DisplayConfigVideoOutputTechnology.DisplayPortExternal;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an indirect (virtual or USB-wired) display
+        /// </summary>
+        public bool IsIndirect => OutputTechnology == DisplayConfigVideoOutputTechnology.IndirectWired ||
+                                  OutputTechnology == DisplayConfigVideoOutputTechnology.IndirectVirtual;
 
         /// <summary>
         ///     Gets the rotation of the target

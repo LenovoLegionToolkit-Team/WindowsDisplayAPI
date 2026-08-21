@@ -233,6 +233,92 @@ namespace WindowsDisplayAPI.DisplayConfig
         }
 
         /// <summary>
+        ///     Gets the display video output technology (connector type)
+        /// </summary>
+        /// <exception cref="TargetNotAvailableException">The target is not available</exception>
+        /// <exception cref="Win32Exception">Error code can be retrieved from Win32Exception.NativeErrorCode property</exception>
+        public DisplayConfigVideoOutputTechnology OutputTechnology
+        {
+            get
+            {
+                if (!IsAvailable)
+                {
+                    throw new TargetNotAvailableException("Extra information about the target is not available.",
+                        Adapter.AdapterId, TargetId);
+                }
+
+                var targetName = new DisplayConfigTargetDeviceName(Adapter.AdapterId, TargetId);
+                var result = DisplayConfigApi.DisplayConfigGetDeviceInfo(ref targetName);
+
+                if (result == Win32Status.Success)
+                {
+                    return targetName.OutputTechnology;
+                }
+
+                throw new Win32Exception((int) result);
+            }
+        }
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output device connects internally to a display device
+        /// </summary>
+        public bool IsInternal
+        {
+            get
+            {
+                try
+                {
+                    var tech = OutputTechnology;
+                    return tech == DisplayConfigVideoOutputTechnology.Internal ||
+                           tech == DisplayConfigVideoOutputTechnology.DisplayPortEmbedded ||
+                           tech == DisplayConfigVideoOutputTechnology.UDIEmbedded;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an external DisplayPort
+        /// </summary>
+        public bool IsExternalDisplayPort
+        {
+            get
+            {
+                try
+                {
+                    return OutputTechnology == DisplayConfigVideoOutputTechnology.DisplayPortExternal;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an indirect (virtual or USB-wired) display
+        /// </summary>
+        public bool IsIndirect
+        {
+            get
+            {
+                try
+                {
+                    var tech = OutputTechnology;
+                    return tech == DisplayConfigVideoOutputTechnology.IndirectWired ||
+                           tech == DisplayConfigVideoOutputTechnology.IndirectVirtual;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Gets a boolean value indicating the device availability
         /// </summary>
         public bool IsAvailable { get; }

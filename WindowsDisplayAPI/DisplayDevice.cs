@@ -1,6 +1,7 @@
-﻿using System.Linq;
+using System.Linq;
 using WindowsDisplayAPI.DisplayConfig;
 using WindowsDisplayAPI.Native.DeviceContext;
+using WindowsDisplayAPI.Native.DisplayConfig;
 
 namespace WindowsDisplayAPI
 {
@@ -139,5 +140,26 @@ namespace WindowsDisplayAPI
                 .GetDisplayTargets()
                 .FirstOrDefault(target => target.DevicePath.Equals(DevicePath));
         }
+
+        /// <summary>
+        ///     Gets the display video output technology (connector type)
+        /// </summary>
+        public virtual DisplayConfigVideoOutputTechnology OutputTechnology =>
+            ToPathDisplayTarget()?.OutputTechnology ?? DisplayConfigVideoOutputTechnology.Other;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output device connects internally to a display device
+        /// </summary>
+        public virtual bool IsInternal => ToPathDisplayTarget()?.IsInternal ?? false;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an external DisplayPort
+        /// </summary>
+        public virtual bool IsExternalDisplayPort => ToPathDisplayTarget()?.IsExternalDisplayPort ?? false;
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether the video output is an indirect (virtual or USB-wired) display
+        /// </summary>
+        public virtual bool IsIndirect => ToPathDisplayTarget()?.IsIndirect ?? false;
     }
 }

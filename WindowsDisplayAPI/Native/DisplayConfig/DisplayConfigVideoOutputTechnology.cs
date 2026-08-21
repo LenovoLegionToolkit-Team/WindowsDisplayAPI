@@ -1,4 +1,4 @@
-﻿namespace WindowsDisplayAPI.Native.DisplayConfig
+namespace WindowsDisplayAPI.Native.DisplayConfig
 {
     /// <summary>
     ///     Possible target's connector types
@@ -86,6 +86,21 @@
         ///     Indicates that the VidPN target is a Miracast wireless display device.
         /// </summary>
         Miracast = 15,
+
+        /// <summary>
+        ///     Indicates that the video output device is an indirect wired display adapter.
+        /// </summary>
+        IndirectWired = 16,
+
+        /// <summary>
+        ///     Indicates that the video output device is an indirect virtual software display.
+        /// </summary>
+        IndirectVirtual = 17,
+
+        /// <summary>
+        ///     Indicates a DisplayPort connection tunneled over USB.
+        /// </summary>
+        DisplayPortUsbTunnel = 18,
 
         /// <summary>
         ///     Indicates that the video output device connects internally to a display device (for example, the internal
