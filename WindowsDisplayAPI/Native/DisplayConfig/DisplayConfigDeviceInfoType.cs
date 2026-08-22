@@ -19,6 +19,7 @@ namespace WindowsDisplayAPI.Native.DisplayConfig
         SetMonitorSpecialization = 13,
         SetReserved1 = 14,
         GetAdvancedColorInfo2 = 15,
-        SetHdrState = 16
+        SetHdrState = 16,
+        SetWcgState = 17
     }
 }

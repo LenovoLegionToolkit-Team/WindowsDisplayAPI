@@ -83,6 +83,11 @@ namespace WindowsDisplayAPI.Native
         );
 
         [DllImport("user32")]
+        public static extern Win32Status DisplayConfigSetDeviceInfo(
+            ref DisplayConfigSetWcgState setWcgState
+        );
+
+        [DllImport("user32")]
         public static extern Win32Status GetDisplayConfigBufferSizes(
             QueryDeviceConfigFlags flags,
             out uint pathArrayElements,

@@ -74,6 +74,10 @@ namespace WindowsDisplayAPI.Native.DisplayConfig.Structures
             {
                 Type = DisplayConfigDeviceInfoType.SetHdrState;
             }
+            else if (requestType == typeof(DisplayConfigSetWcgState))
+            {
+                Type = DisplayConfigDeviceInfoType.SetWcgState;
+            }
 
             // throw exception?
         }

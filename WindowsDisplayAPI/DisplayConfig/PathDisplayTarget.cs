@@ -446,19 +446,27 @@ namespace WindowsDisplayAPI.DisplayConfig
 
             if (result2 == Win32Status.Success)
             {
+                var advancedColorSupported = colorInfo2.AdvancedColorSupported;
+                var advancedColorEnabled = colorInfo2.AdvancedColorEnabled;
                 var hdrSupported = colorInfo2.HighDynamicRangeSupported;
-                var wideColorEnforced = false;
-                var advancedColorForceDisabled = colorInfo2.AdvancedColorLimitedByPolicy;
-                var advancedColorEnabled = hdrSupported && colorInfo2.ActiveColorMode == DisplayConfigAdvancedColorMode.Hdr;
+                var hdrEnabled = colorInfo2.HighDynamicRangeUserEnabled && colorInfo2.ActiveColorMode == DisplayConfigAdvancedColorMode.Hdr;
+                var acmSupported = colorInfo2.AutoColorManagementSupported;
+                var acmEnabled = colorInfo2.AutoColorManagementEnabled;
+                var wideColorEnforced = colorInfo2.WideColorGamutSupported;
+                var advancedColorForceDisabled = false;
 
                 return new DisplayAdvancedColorInfo(
-                    hdrSupported,
+                    advancedColorSupported,
                     advancedColorEnabled,
                     wideColorEnforced,
                     advancedColorForceDisabled,
                     colorInfo2.ColorEncoding,
                     colorInfo2.BitsPerColorChannel,
-                    colorInfo2.ActiveColorMode
+                    colorInfo2.ActiveColorMode,
+                    hdrSupported,
+                    hdrEnabled,
+                    acmSupported,
+                    acmEnabled
                 );
             }
 
@@ -471,6 +479,11 @@ namespace WindowsDisplayAPI.DisplayConfig
                     ? DisplayConfigAdvancedColorMode.Hdr
                     : DisplayConfigAdvancedColorMode.Sdr;
 
+                var acmSupported = colorInfo.WideColorEnforced;
+                var acmEnabled = acmSupported && colorInfo.AdvancedColorEnabled;
+                var hdrSupported = colorInfo.AdvancedColorSupported && !acmSupported;
+                var hdrEnabled = hdrSupported && colorInfo.AdvancedColorEnabled;
+
                 return new DisplayAdvancedColorInfo(
                     colorInfo.AdvancedColorSupported,
                     colorInfo.AdvancedColorEnabled,
@@ -478,7 +491,11 @@ namespace WindowsDisplayAPI.DisplayConfig
                     colorInfo.AdvancedColorForceDisabled,
                     colorInfo.ColorEncoding,
                     colorInfo.BitsPerColorChannel,
-                    activeColorMode
+                    activeColorMode,
+                    hdrSupported,
+                    hdrEnabled,
+                    acmSupported,
+                    acmEnabled
                 );
             }
 
@@ -486,12 +503,35 @@ namespace WindowsDisplayAPI.DisplayConfig
         }
 
         /// <summary>
-        ///     Sets the Advanced Color / HDR state for this display target.
+        ///     Sets the Advanced Color state for this display target.
         /// </summary>
-        /// <param name="enable">true to enable HDR/Advanced Color; false to disable.</param>
+        /// <param name="enable">true to enable Advanced Color; false to disable.</param>
         /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
         /// <exception cref="Win32Exception">Win32 error occurred setting device info.</exception>
         public void SetAdvancedColorState(bool enable)
+        {
+            if (!IsAvailable)
+            {
+                throw new TargetNotAvailableException("Extra information about the target is not available.",
+                    Adapter.AdapterId, TargetId);
+            }
+
+            var setColorState = new DisplayConfigSetAdvancedColorState(Adapter.AdapterId, TargetId, enable);
+            var resultColor = DisplayConfigApi.DisplayConfigSetDeviceInfo(ref setColorState);
+
+            if (resultColor != Win32Status.Success)
+            {
+                throw new Win32Exception((int) resultColor);
+            }
+        }
+
+        /// <summary>
+        ///     Sets the HDR state for this display target.
+        /// </summary>
+        /// <param name="enable">true to enable HDR; false to disable.</param>
+        /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
+        /// <exception cref="Win32Exception">Win32 error occurred setting device info.</exception>
+        public void SetHdrState(bool enable)
         {
             if (!IsAvailable)
             {
@@ -507,23 +547,31 @@ namespace WindowsDisplayAPI.DisplayConfig
                 return;
             }
 
-            var setColorState = new DisplayConfigSetAdvancedColorState(Adapter.AdapterId, TargetId, enable);
-            var resultColor = DisplayConfigApi.DisplayConfigSetDeviceInfo(ref setColorState);
-
-            if (resultColor != Win32Status.Success)
-            {
-                throw new Win32Exception((int) resultColor);
-            }
+            SetAdvancedColorState(enable);
         }
 
         /// <summary>
-        ///     Sets the HDR state for this display target. Alias for <see cref="SetAdvancedColorState"/>.
+        ///     Sets the Auto Color Management (ACM) / WCG state for this display target.
         /// </summary>
-        /// <param name="enable">true to enable HDR; false to disable.</param>
+        /// <param name="enable">true to enable ACM / WCG; false to disable.</param>
         /// <exception cref="TargetNotAvailableException">The target is not available.</exception>
         /// <exception cref="Win32Exception">Win32 error occurred setting device info.</exception>
-        public void SetHdrState(bool enable)
+        public void SetWcgState(bool enable)
         {
+            if (!IsAvailable)
+            {
+                throw new TargetNotAvailableException("Extra information about the target is not available.",
+                    Adapter.AdapterId, TargetId);
+            }
+
+            var setWcgState = new DisplayConfigSetWcgState(Adapter.AdapterId, TargetId, enable);
+            var resultWcg = DisplayConfigApi.DisplayConfigSetDeviceInfo(ref setWcgState);
+
+            if (resultWcg == Win32Status.Success)
+            {
+                return;
+            }
+
             SetAdvancedColorState(enable);
         }
 

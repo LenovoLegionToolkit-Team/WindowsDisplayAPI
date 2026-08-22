@@ -12,13 +12,14 @@ namespace WindowsDisplayAPI.Native.DisplayConfig.Structures
         [MarshalAs(UnmanagedType.U4)] private readonly uint _BitsPerColorChannel;
         [MarshalAs(UnmanagedType.U4)] private readonly DisplayConfigAdvancedColorMode _ActiveColorMode;
 
-        public bool HighDynamicRangeSupported => (_Value & 0x1) != 0;
-        public bool HighDynamicRangeUserEnabled => (_Value & 0x2) != 0;
+        public bool AdvancedColorSupported => (_Value & 0x1) != 0;
+        public bool AdvancedColorEnabled => (_Value & 0x2) != 0;
         public bool WideColorGamutSupported => (_Value & 0x4) != 0;
         public bool WideColorGamutUserEnabled => (_Value & 0x8) != 0;
-        public bool AdvancedColorLimitedByPolicy => (_Value & 0x10) != 0;
-        public bool AutoDynamicRangeSupported => (_Value & 0x20) != 0;
-        public bool AutoDynamicRangeUserEnabled => (_Value & 0x40) != 0;
+        public bool HighDynamicRangeSupported => (_Value & 0x10) != 0;
+        public bool HighDynamicRangeUserEnabled => (_Value & 0x20) != 0;
+        public bool AutoColorManagementSupported => (_Value & 0x40) != 0;
+        public bool AutoColorManagementEnabled => (_Value & 0x80) != 0;
 
         public DisplayConfigColorEncoding ColorEncoding => _ColorEncoding;
         public uint BitsPerColorChannel => _BitsPerColorChannel;

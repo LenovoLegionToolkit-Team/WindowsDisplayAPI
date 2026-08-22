@@ -44,6 +44,26 @@ namespace WindowsDisplayAPI.DisplayConfig
         public DisplayConfigAdvancedColorMode ActiveColorMode { get; }
 
         /// <summary>
+        ///     Gets whether High Dynamic Range (HDR) is supported by the display device.
+        /// </summary>
+        public bool HighDynamicRangeSupported { get; }
+
+        /// <summary>
+        ///     Gets whether High Dynamic Range (HDR) is currently enabled.
+        /// </summary>
+        public bool HighDynamicRangeEnabled { get; }
+
+        /// <summary>
+        ///     Gets whether Auto Color Management (ACM) / Wide Color Gamut is supported by the display device.
+        /// </summary>
+        public bool AutoColorManagementSupported { get; }
+
+        /// <summary>
+        ///     Gets whether Auto Color Management (ACM) / Wide Color Gamut is currently enabled.
+        /// </summary>
+        public bool AutoColorManagementEnabled { get; }
+
+        /// <summary>
         ///     Initializes a new instance of the <see cref="DisplayAdvancedColorInfo"/> struct.
         /// </summary>
         /// <param name="advancedColorSupported">Whether Advanced Color is supported.</param>
@@ -53,6 +73,10 @@ namespace WindowsDisplayAPI.DisplayConfig
         /// <param name="colorEncoding">Active color encoding.</param>
         /// <param name="bitsPerColorChannel">Bits per color channel.</param>
         /// <param name="activeColorMode">Active color mode.</param>
+        /// <param name="highDynamicRangeSupported">Whether HDR is supported.</param>
+        /// <param name="highDynamicRangeEnabled">Whether HDR is enabled.</param>
+        /// <param name="autoColorManagementSupported">Whether Auto Color Management is supported.</param>
+        /// <param name="autoColorManagementEnabled">Whether Auto Color Management is enabled.</param>
         public DisplayAdvancedColorInfo(
             bool advancedColorSupported,
             bool advancedColorEnabled,
@@ -60,7 +84,11 @@ namespace WindowsDisplayAPI.DisplayConfig
             bool advancedColorForceDisabled,
             DisplayConfigColorEncoding colorEncoding = DisplayConfigColorEncoding.Rgb,
             uint bitsPerColorChannel = 8,
-            DisplayConfigAdvancedColorMode activeColorMode = DisplayConfigAdvancedColorMode.Sdr)
+            DisplayConfigAdvancedColorMode activeColorMode = DisplayConfigAdvancedColorMode.Sdr,
+            bool highDynamicRangeSupported = false,
+            bool highDynamicRangeEnabled = false,
+            bool autoColorManagementSupported = false,
+            bool autoColorManagementEnabled = false)
         {
             AdvancedColorSupported = advancedColorSupported;
             AdvancedColorEnabled = advancedColorEnabled;
@@ -69,6 +97,10 @@ namespace WindowsDisplayAPI.DisplayConfig
             ColorEncoding = colorEncoding;
             BitsPerColorChannel = bitsPerColorChannel;
             ActiveColorMode = activeColorMode;
+            HighDynamicRangeSupported = highDynamicRangeSupported;
+            HighDynamicRangeEnabled = highDynamicRangeEnabled;
+            AutoColorManagementSupported = autoColorManagementSupported;
+            AutoColorManagementEnabled = autoColorManagementEnabled;
         }
 
         /// <inheritdoc />
@@ -80,7 +112,11 @@ namespace WindowsDisplayAPI.DisplayConfig
                    AdvancedColorForceDisabled == other.AdvancedColorForceDisabled &&
                    ColorEncoding == other.ColorEncoding &&
                    BitsPerColorChannel == other.BitsPerColorChannel &&
-                   ActiveColorMode == other.ActiveColorMode;
+                   ActiveColorMode == other.ActiveColorMode &&
+                   HighDynamicRangeSupported == other.HighDynamicRangeSupported &&
+                   HighDynamicRangeEnabled == other.HighDynamicRangeEnabled &&
+                   AutoColorManagementSupported == other.AutoColorManagementSupported &&
+                   AutoColorManagementEnabled == other.AutoColorManagementEnabled;
         }
 
         /// <inheritdoc />
@@ -101,6 +137,10 @@ namespace WindowsDisplayAPI.DisplayConfig
                 hashCode = (hashCode * 397) ^ (int) ColorEncoding;
                 hashCode = (hashCode * 397) ^ (int) BitsPerColorChannel;
                 hashCode = (hashCode * 397) ^ (int) ActiveColorMode;
+                hashCode = (hashCode * 397) ^ HighDynamicRangeSupported.GetHashCode();
+                hashCode = (hashCode * 397) ^ HighDynamicRangeEnabled.GetHashCode();
+                hashCode = (hashCode * 397) ^ AutoColorManagementSupported.GetHashCode();
+                hashCode = (hashCode * 397) ^ AutoColorManagementEnabled.GetHashCode();
                 return hashCode;
             }
         }
@@ -124,7 +164,7 @@ namespace WindowsDisplayAPI.DisplayConfig
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Supported: {AdvancedColorSupported}, Enabled: {AdvancedColorEnabled}, Mode: {ActiveColorMode}, {BitsPerColorChannel}bpc {ColorEncoding}";
+            return $"Supported: {AdvancedColorSupported}, Enabled: {AdvancedColorEnabled}, HDR: {HighDynamicRangeSupported} (Enabled: {HighDynamicRangeEnabled}), ACM: {AutoColorManagementSupported} (Enabled: {AutoColorManagementEnabled}), Mode: {ActiveColorMode}, {BitsPerColorChannel}bpc {ColorEncoding}";
         }
     }
 }
