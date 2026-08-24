@@ -793,7 +793,6 @@ namespace WindowsDisplayAPI.DisplayConfig
                         }
 
                         var modes = path.FindModes(Windows.Devices.Display.Core.DisplayModeQueryOptions.None);
-                        var physicalRates = new List<double>();
 
                         foreach (var mode in modes)
                         {
@@ -812,7 +811,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                             var presRate = (double)mode.PresentationRate.VerticalSyncRate.Numerator / presDenom;
                             var physRate = (double)mode.PhysicalPresentationRate.VerticalSyncRate.Numerator / physDenom;
 
-                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1 || (Math.Abs(presRate - 60.0) < 0.1 && physRate >= 119.0))
+                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1)
                             {
                                 return true;
                             }
@@ -820,21 +819,6 @@ namespace WindowsDisplayAPI.DisplayConfig
                             if (physRate >= 119.0 && mode.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var prop) && prop != null)
                             {
                                 return true;
-                            }
-
-                            physicalRates.Add(physRate);
-                        }
-
-                        if (IsInternal && physicalRates.Count > 0)
-                        {
-                            var maxPhysRate = physicalRates.Max();
-                            if (maxPhysRate >= 119.0)
-                            {
-                                if (physicalRates.Any(r => Math.Abs(r - maxPhysRate / 2.0) < 0.5) ||
-                                    physicalRates.Any(r => Math.Abs(r - 60.0) < 0.5))
-                                {
-                                    return true;
-                                }
                             }
                         }
                     }
