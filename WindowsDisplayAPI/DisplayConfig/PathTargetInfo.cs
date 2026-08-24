@@ -281,7 +281,7 @@ namespace WindowsDisplayAPI.DisplayConfig
         /// <summary>
         ///     Gets a boolean value indicating whether Dynamic Refresh Rate (DRR) is supported by this path target
         /// </summary>
-        public bool IsDynamicRefreshRateSupported => DisplayTarget?.IsDynamicRefreshRateSupported == true;
+        public bool IsDynamicRefreshRateSupported => (IsVirtualModeSupportedByPath || IsBoostRefreshRate) && DisplayTarget?.IsDynamicRefreshRateSupported == true;
 
         /// <summary>
         ///     Gets the type of the display device connection
