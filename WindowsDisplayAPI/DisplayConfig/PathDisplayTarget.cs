@@ -746,5 +746,95 @@ namespace WindowsDisplayAPI.DisplayConfig
                     .SelectMany(adapter => adapter.GetDisplayDevices())
                     .FirstOrDefault(device => device.DevicePath.Equals(DevicePath));
         }
+
+#if WINDOWS10_0_18362_0_OR_GREATER || NET9_0_WINDOWS10_0_26100_0_OR_GREATER
+        private static readonly Guid DynamicRefreshRatePropertyGuid = new("D2D490B1-4861-4D69-912C-EEE5590E1980");
+
+        /// <summary>
+        ///     Gets a boolean value indicating whether Dynamic Refresh Rate (DRR) is supported by this target.
+        /// </summary>
+        public bool IsDynamicRefreshRateSupported
+        {
+            get
+            {
+                if (!IsAvailable)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    using var manager = Windows.Devices.Display.Core.DisplayManager.Create(Windows.Devices.Display.Core.DisplayManagerOptions.None);
+                    var result = manager.TryReadCurrentStateForAllTargets();
+                    if (result.ErrorCode != Windows.Devices.Display.Core.DisplayManagerResult.Success || result.State == null)
+                    {
+                        return false;
+                    }
+
+                    var state = result.State;
+
+                    foreach (var target in state.Targets)
+                    {
+                        if (!target.IsConnected || target.AdapterRelativeId != TargetId)
+                        {
+                            continue;
+                        }
+
+                        if (target.Adapter.Id.LowPart != Adapter.AdapterId.LowPart ||
+                            target.Adapter.Id.HighPart != Adapter.AdapterId.HighPart)
+                        {
+                            continue;
+                        }
+
+                        var path = state.GetPathForTarget(target);
+                        if (path == null)
+                        {
+                            continue;
+                        }
+
+                        var modes = path.FindModes(Windows.Devices.Display.Core.DisplayModeQueryOptions.None);
+                        foreach (var mode in modes)
+                        {
+                            if (mode.IsInterlaced)
+                            {
+                                continue;
+                            }
+
+                            var presDenom = mode.PresentationRate.VerticalSyncRate.Denominator;
+                            var physDenom = mode.PhysicalPresentationRate.VerticalSyncRate.Denominator;
+                            if (presDenom == 0 || physDenom == 0)
+                            {
+                                continue;
+                            }
+
+                            var presRate = (double)mode.PresentationRate.VerticalSyncRate.Numerator / presDenom;
+                            var physRate = (double)mode.PhysicalPresentationRate.VerticalSyncRate.Numerator / physDenom;
+
+                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1 || (Math.Abs(presRate - 60.0) < 0.1 && physRate >= 119.0))
+                            {
+                                return true;
+                            }
+
+                            if (physRate >= 119.0 && mode.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var prop) && prop != null)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore fallback
+                }
+
+                return false;
+            }
+        }
+#else
+        /// <summary>
+        ///     Gets a boolean value indicating whether Dynamic Refresh Rate (DRR) is supported by this target.
+        /// </summary>
+        public bool IsDynamicRefreshRateSupported => false;
+#endif
     }
 }

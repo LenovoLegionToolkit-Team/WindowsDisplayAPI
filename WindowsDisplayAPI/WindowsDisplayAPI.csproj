@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>net9.0-windows10.0.26100.0;netstandard2.0;net45</TargetFrameworks>
     <Description>WindowsDisplayAPI is a .Net wrapper for Windows Display and Windows CCD APIs</Description>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageIcon>Icon.png</PackageIcon>
@@ -12,6 +12,7 @@
     <Title>Windows Display API Wrapper (CCD)</Title>
     <PackageId>LLT.WindowsDisplayAPI</PackageId>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UseWindowsForms Condition="'$(TargetFramework)' == 'net9.0-windows10.0.26100.0'">true</UseWindowsForms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\Debug</OutputPath>
