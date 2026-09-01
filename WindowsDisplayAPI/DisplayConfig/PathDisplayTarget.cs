@@ -868,7 +868,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                     if (device?.DisplayScreen != null)
                     {
                         var possibleSettings = device.DisplayScreen.GetPossibleSettings();
-                        if (possibleSettings != null && possibleSettings.Length > 0)
+                        if (possibleSettings != null)
                         {
                             var currentSettings = device.DisplayScreen.CurrentSetting;
                             var matchingFreqs = possibleSettings
