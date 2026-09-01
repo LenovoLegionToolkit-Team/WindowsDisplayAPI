@@ -811,7 +811,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                             var presRate = (double)mode.PresentationRate.VerticalSyncRate.Numerator / presDenom;
                             var physRate = (double)mode.PhysicalPresentationRate.VerticalSyncRate.Numerator / physDenom;
 
-                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1)
+                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1 || (Math.Abs(presRate - 60.0) < 0.5 && physRate >= 119.0))
                             {
                                 return true;
                             }
