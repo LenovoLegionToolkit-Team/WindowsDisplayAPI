@@ -747,8 +747,43 @@ namespace WindowsDisplayAPI.DisplayConfig
                     .FirstOrDefault(device => device.DevicePath.Equals(DevicePath));
         }
 
+        /// <summary>
+        ///     Calculates the dynamic refresh rate low (idle) frequency for a given maximum frequency and available frequencies.
+        /// </summary>
+        /// <param name="maxFrequency">The maximum refresh rate of the display.</param>
+        /// <param name="availableFrequencies">The collection of available frequencies supported by the display.</param>
+        /// <returns>The low frequency to pair with the maximum frequency, or 0 if unsupported.</returns>
+        public static int GetDynamicLowFrequency(int maxFrequency, IEnumerable<int> availableFrequencies)
+        {
+            if (maxFrequency < 120 || availableFrequencies == null)
+            {
+                return 0;
+            }
+
+            var frequencies = availableFrequencies as int[] ?? availableFrequencies.ToArray();
+
+            var halfRate = maxFrequency / 2;
+            var halfRateMatch = frequencies.FirstOrDefault(f => Math.Abs(f - halfRate) <= 1);
+            if (halfRateMatch > 0)
+            {
+                return halfRateMatch;
+            }
+
+            if (maxFrequency % 60 == 0 || maxFrequency % 2 != 0)
+            {
+                var base60Match = frequencies.FirstOrDefault(f => Math.Abs(f - 60) <= 1);
+                if (base60Match > 0)
+                {
+                    return base60Match;
+                }
+            }
+
+            return 0;
+        }
+
 #if WINDOWS10_0_18362_0_OR_GREATER || NET9_0_WINDOWS10_0_26100_0_OR_GREATER
         private static readonly Guid DynamicRefreshRatePropertyGuid = new("D2D490B1-4861-4D69-912C-EEE5590E1980");
+#endif
 
         /// <summary>
         ///     Gets a boolean value indicating whether Dynamic Refresh Rate (DRR) is supported by this target.
@@ -762,80 +797,100 @@ namespace WindowsDisplayAPI.DisplayConfig
                     return false;
                 }
 
+#if WINDOWS10_0_18362_0_OR_GREATER || NET9_0_WINDOWS10_0_26100_0_OR_GREATER
                 try
                 {
                     using var manager = Windows.Devices.Display.Core.DisplayManager.Create(Windows.Devices.Display.Core.DisplayManagerOptions.None);
                     var result = manager.TryReadCurrentStateForAllTargets();
-                    if (result.ErrorCode != Windows.Devices.Display.Core.DisplayManagerResult.Success || result.State == null)
+                    if (result.ErrorCode == Windows.Devices.Display.Core.DisplayManagerResult.Success && result.State != null)
                     {
-                        return false;
-                    }
+                        var state = result.State;
 
-                    var state = result.State;
-
-                    foreach (var target in state.Targets)
-                    {
-                        if (!target.IsConnected || target.AdapterRelativeId != TargetId)
+                        foreach (var target in state.Targets)
                         {
-                            continue;
-                        }
-
-                        if (target.Adapter.Id.LowPart != Adapter.AdapterId.LowPart ||
-                            target.Adapter.Id.HighPart != Adapter.AdapterId.HighPart)
-                        {
-                            continue;
-                        }
-
-                        var path = state.GetPathForTarget(target);
-                        if (path == null)
-                        {
-                            continue;
-                        }
-
-                        var modes = path.FindModes(Windows.Devices.Display.Core.DisplayModeQueryOptions.None);
-
-                        foreach (var mode in modes)
-                        {
-                            if (mode.IsInterlaced)
+                            if (!target.IsConnected || target.AdapterRelativeId != TargetId)
                             {
                                 continue;
                             }
 
-                            var presDenom = mode.PresentationRate.VerticalSyncRate.Denominator;
-                            var physDenom = mode.PhysicalPresentationRate.VerticalSyncRate.Denominator;
-                            if (presDenom == 0 || physDenom == 0)
+                            if (target.Adapter.Id.LowPart != Adapter.AdapterId.LowPart ||
+                                target.Adapter.Id.HighPart != Adapter.AdapterId.HighPart)
                             {
                                 continue;
                             }
 
-                            var presRate = (double)mode.PresentationRate.VerticalSyncRate.Numerator / presDenom;
-                            var physRate = (double)mode.PhysicalPresentationRate.VerticalSyncRate.Numerator / physDenom;
-
-                            if (Math.Abs(physRate - 2.0 * presRate) < 0.1 || (Math.Abs(presRate - 60.0) < 0.5 && physRate >= 119.0))
+                            var path = state.GetPathForTarget(target);
+                            if (path == null)
                             {
-                                return true;
+                                continue;
                             }
 
-                            if (physRate >= 119.0 && mode.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var prop) && prop != null)
+                            var modes = path.FindModes(Windows.Devices.Display.Core.DisplayModeQueryOptions.None);
+
+                            foreach (var mode in modes)
                             {
-                                return true;
+                                if (mode.IsInterlaced)
+                                {
+                                    continue;
+                                }
+
+                                var presDenom = mode.PresentationRate.VerticalSyncRate.Denominator;
+                                var physDenom = mode.PhysicalPresentationRate.VerticalSyncRate.Denominator;
+                                if (presDenom == 0 || physDenom == 0)
+                                {
+                                    continue;
+                                }
+
+                                var presRate = (double)mode.PresentationRate.VerticalSyncRate.Numerator / presDenom;
+                                var physRate = (double)mode.PhysicalPresentationRate.VerticalSyncRate.Numerator / physDenom;
+
+                                if (Math.Abs(physRate - 2.0 * presRate) < 0.1 || (Math.Abs(presRate - 60.0) < 0.5 && physRate >= 119.0))
+                                {
+                                    return true;
+                                }
+
+                                if (physRate >= 119.0 && mode.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var prop) && prop != null)
+                                {
+                                    return true;
+                                }
                             }
                         }
                     }
                 }
                 catch
                 {
-                    // Ignore fallback
+                }
+#endif
+
+                try
+                {
+                    var device = ToDisplayDevice();
+                    if (device?.DisplayScreen != null)
+                    {
+                        var possibleSettings = device.DisplayScreen.GetPossibleSettings();
+                        if (possibleSettings != null && possibleSettings.Length > 0)
+                        {
+                            var currentSettings = device.DisplayScreen.CurrentSetting;
+                            var matchingFreqs = possibleSettings
+                                .Where(s => s.Resolution == currentSettings.Resolution && !s.IsInterlaced)
+                                .Select(s => s.Frequency)
+                                .Distinct()
+                                .ToArray();
+
+                            if (matchingFreqs.Length > 0)
+                            {
+                                var maxFreq = matchingFreqs.Max();
+                                return GetDynamicLowFrequency(maxFreq, matchingFreqs) > 0;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
                 }
 
                 return false;
             }
         }
-#else
-        /// <summary>
-        ///     Gets a boolean value indicating whether Dynamic Refresh Rate (DRR) is supported by this target.
-        /// </summary>
-        public bool IsDynamicRefreshRateSupported => false;
-#endif
     }
 }
