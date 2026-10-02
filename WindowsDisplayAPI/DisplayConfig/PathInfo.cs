@@ -484,7 +484,7 @@ namespace WindowsDisplayAPI.DisplayConfig
         {
             return GetPathInfos(
                 virtualModeAware
-                    ? QueryDeviceConfigFlags.AllPaths | QueryDeviceConfigFlags.VirtualModeAware
+                    ? QueryDeviceConfigFlags.AllPaths | QueryDeviceConfigFlags.VirtualModeAware | QueryDeviceConfigFlags.VirtualRefreshRateAware
                     : QueryDeviceConfigFlags.AllPaths,
                 out _
             );
