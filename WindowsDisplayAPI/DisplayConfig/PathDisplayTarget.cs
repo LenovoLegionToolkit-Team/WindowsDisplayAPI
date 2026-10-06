@@ -771,40 +771,93 @@ namespace WindowsDisplayAPI.DisplayConfig
                 return 0;
             }
 
-            var minimumFrequency = GetDynamicMinimumFrequency();
-            if (minimumFrequency > 0)
+            var minimumFrequency = GetDynamicMinimumFrequency(maxFrequency);
+            if (minimumFrequency <= 0)
             {
-                return frequencies.Where(frequency => frequency >= minimumFrequency).DefaultIfEmpty(0).Min();
+                return 0;
             }
 
-            var halfRateMatch = frequencies.FirstOrDefault(frequency => Math.Abs(frequency - maxFrequency / 2) <= 1);
-            if (halfRateMatch > 0)
-            {
-                return halfRateMatch;
-            }
-
-            if (maxFrequency % 60 == 0 || maxFrequency % 2 != 0)
-            {
-                var base60Match = frequencies.FirstOrDefault(frequency => Math.Abs(frequency - 60) <= 1);
-                if (base60Match > 0)
-                {
-                    return base60Match;
-                }
-            }
-
-            return 0;
+            return frequencies.Where(frequency => frequency >= minimumFrequency).DefaultIfEmpty(0).Min();
         }
 
 #if WINDOWS10_0_18362_0_OR_GREATER || NET9_0_WINDOWS10_0_26100_0_OR_GREATER
+        private const double FrequencyTolerance = 1;
+
         private static readonly Guid DynamicRefreshRatePropertyGuid = new("D2DB8E11-6861-4D69-912C-EEE5590E1980");
 
-        private double GetDynamicMinimumFrequency()
+        private double GetDynamicMinimumFrequency(int maxFrequency)
         {
             if (!IsAvailable)
             {
                 return 0;
             }
 
+            var modeQueryFrequency = GetModeQueryMinimumFrequency(maxFrequency);
+            if (modeQueryFrequency > 0)
+            {
+                return modeQueryFrequency;
+            }
+
+            return GetActivePathMinimumFrequency(maxFrequency);
+        }
+
+        private double GetModeQueryMinimumFrequency(int maxFrequency)
+        {
+            try
+            {
+                if (!Windows.Foundation.Metadata.ApiInformation.IsMethodPresent(
+                        "Windows.Devices.Display.Core.DisplayManager",
+                        "TryReadCurrentStateForModeQuery"))
+                {
+                    return 0;
+                }
+
+                using var manager = Windows.Devices.Display.Core.DisplayManager.Create(Windows.Devices.Display.Core.DisplayManagerOptions.VirtualRefreshRateAware);
+                var result = manager.TryReadCurrentStateForModeQuery();
+                if (result.ErrorCode != Windows.Devices.Display.Core.DisplayManagerResult.Success || result.State == null || result.State.IsReadOnly)
+                {
+                    return 0;
+                }
+
+                var path = GetTargetPath(result.State);
+                if (path == null)
+                {
+                    return 0;
+                }
+
+                path.PresentationRate = null;
+                path.PhysicalPresentationRate = null;
+
+                var minimumFrequency = 0d;
+                foreach (var mode in path.FindModes(Windows.Devices.Display.Core.DisplayModeQueryOptions.None))
+                {
+                    if (Math.Abs(GetPresentationRateFrequency(mode.PhysicalPresentationRate) - maxFrequency) > FrequencyTolerance)
+                    {
+                        continue;
+                    }
+
+                    if (mode.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var modeValue) &&
+                        modeValue is Windows.Devices.Display.Core.DisplayPresentationRate modeRate)
+                    {
+                        var modeMinimumFrequency = GetPresentationRateFrequency(modeRate);
+                        if (modeMinimumFrequency > 0 && (minimumFrequency <= 0 || modeMinimumFrequency < minimumFrequency))
+                        {
+                            minimumFrequency = modeMinimumFrequency;
+                        }
+                    }
+                }
+
+                return minimumFrequency;
+            }
+            catch
+            {
+            }
+
+            return 0;
+        }
+
+        private double GetActivePathMinimumFrequency(int maxFrequency)
+        {
             try
             {
                 using var manager = Windows.Devices.Display.Core.DisplayManager.Create(Windows.Devices.Display.Core.DisplayManagerOptions.VirtualRefreshRateAware);
@@ -814,31 +867,22 @@ namespace WindowsDisplayAPI.DisplayConfig
                     return 0;
                 }
 
-                var state = result.State;
-
-                foreach (var target in state.Targets)
+                var path = GetTargetPath(result.State);
+                if (path == null)
                 {
-                    if (!target.IsConnected || target.AdapterRelativeId != TargetId)
-                    {
-                        continue;
-                    }
+                    return 0;
+                }
 
-                    if (target.Adapter.Id.LowPart != Adapter.AdapterId.LowPart || target.Adapter.Id.HighPart != Adapter.AdapterId.HighPart)
-                    {
-                        continue;
-                    }
+                var physicalRate = path.PhysicalPresentationRate;
+                if (physicalRate == null || Math.Abs(GetPresentationRateFrequency(physicalRate.Value) - maxFrequency) > FrequencyTolerance)
+                {
+                    return 0;
+                }
 
-                    var path = state.GetPathForTarget(target);
-                    if (path == null)
-                    {
-                        continue;
-                    }
-
-                    if (path.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var value) &&
-                        value is Windows.Devices.Display.Core.DisplayPresentationRate presentationRate)
-                    {
-                        return GetPresentationRateFrequency(presentationRate);
-                    }
+                if (path.Properties.TryGetValue(DynamicRefreshRatePropertyGuid, out var value) &&
+                    value is Windows.Devices.Display.Core.DisplayPresentationRate presentationRate)
+                {
+                    return GetPresentationRateFrequency(presentationRate);
                 }
             }
             catch
@@ -846,6 +890,30 @@ namespace WindowsDisplayAPI.DisplayConfig
             }
 
             return 0;
+        }
+
+        private Windows.Devices.Display.Core.DisplayPath GetTargetPath(Windows.Devices.Display.Core.DisplayState state)
+        {
+            foreach (var target in state.Targets)
+            {
+                if (!target.IsConnected || target.AdapterRelativeId != TargetId)
+                {
+                    continue;
+                }
+
+                if (target.Adapter.Id.LowPart != Adapter.AdapterId.LowPart || target.Adapter.Id.HighPart != Adapter.AdapterId.HighPart)
+                {
+                    continue;
+                }
+
+                var path = state.GetPathForTarget(target);
+                if (path != null)
+                {
+                    return path;
+                }
+            }
+
+            return null;
         }
 
         private static double GetPresentationRateFrequency(Windows.Devices.Display.Core.DisplayPresentationRate presentationRate)
@@ -860,7 +928,7 @@ namespace WindowsDisplayAPI.DisplayConfig
             return presentationRate.VerticalSyncsPerPresentation > 0 ? frequency / presentationRate.VerticalSyncsPerPresentation : frequency;
         }
 #else
-        private double GetDynamicMinimumFrequency()
+        private double GetDynamicMinimumFrequency(int maxFrequency)
         {
             return 0;
         }
