@@ -479,7 +479,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                     ? DisplayConfigAdvancedColorMode.Hdr
                     : DisplayConfigAdvancedColorMode.Sdr;
 
-                var acmSupported = colorInfo.WideColorEnforced;
+                var acmSupported = colorInfo.AdvancedColorSupported && colorInfo.WideColorEnforced;
                 var acmEnabled = acmSupported && colorInfo.AdvancedColorEnabled;
                 var hdrSupported = colorInfo.AdvancedColorSupported && !acmSupported;
                 var hdrEnabled = hdrSupported && colorInfo.AdvancedColorEnabled;
