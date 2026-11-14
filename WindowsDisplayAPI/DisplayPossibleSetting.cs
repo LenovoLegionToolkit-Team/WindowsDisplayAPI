@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using WindowsDisplayAPI.Native.DeviceContext;
 using WindowsDisplayAPI.Native.DeviceContext.Structures;
+using WindowsDisplayAPI.Native.DisplayConfig;
 
 namespace WindowsDisplayAPI
 {
@@ -48,6 +49,34 @@ namespace WindowsDisplayAPI
         ///     Gets a boolean value indicating if the display uses the interlaced signal
         /// </summary>
         public bool IsInterlaced { get; }
+
+        /// <summary>
+        ///     Gets the display configuration pixel format matching the color depth of the display monitor, or
+        ///     <see cref="DisplayConfigPixelFormat.NotSpecified" /> when no pixel format matches
+        /// </summary>
+        public DisplayConfigPixelFormat PixelFormat
+        {
+            get
+            {
+                switch (ColorDepth)
+                {
+                    case ColorDepth.Depth8Bit:
+                        return DisplayConfigPixelFormat.PixelFormat8Bpp;
+
+                    case ColorDepth.Depth16Bit:
+                        return DisplayConfigPixelFormat.PixelFormat16Bpp;
+
+                    case ColorDepth.Depth24Bit:
+                        return DisplayConfigPixelFormat.PixelFormat24Bpp;
+
+                    case ColorDepth.Depth32Bit:
+                        return DisplayConfigPixelFormat.PixelFormat32Bpp;
+
+                    default:
+                        return DisplayConfigPixelFormat.NotSpecified;
+                }
+            }
+        }
 
         /// <summary>
         ///     Gets the size of the display monitor
