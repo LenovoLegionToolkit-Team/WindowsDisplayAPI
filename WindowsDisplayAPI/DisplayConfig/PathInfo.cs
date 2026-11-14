@@ -852,6 +852,19 @@ namespace WindowsDisplayAPI.DisplayConfig
                     sourceMode = displayModes[displayPath.SourceInfo.ModeInfoIndex].SourceMode;
                     key = displayPath.SourceInfo.ModeInfoIndex;
                 }
+                else if (FindModeIndex(
+                             displayModes,
+                             DisplayConfigModeInfoType.Source,
+                             displayPath.SourceInfo.AdapterId,
+                             displayPath.SourceInfo.SourceId,
+                             isVirtualSupported
+                                 ? displayPath.SourceInfo.ModeInfoIndex
+                                 : displayPath.SourceInfo.SourceModeInfoIndex
+                         ) is uint alternateSourceModeIndex)
+                {
+                    sourceMode = displayModes[alternateSourceModeIndex].SourceMode;
+                    key = alternateSourceModeIndex;
+                }
                 else
                 {
                     sourceId--;
@@ -894,6 +907,18 @@ namespace WindowsDisplayAPI.DisplayConfig
                 {
                     targetMode = displayModes[displayPath.TargetInfo.ModeInfoIndex].TargetMode;
                 }
+                else if (FindModeIndex(
+                             displayModes,
+                             DisplayConfigModeInfoType.Target,
+                             displayPath.TargetInfo.AdapterId,
+                             displayPath.TargetInfo.TargetId,
+                             isVirtualSupported
+                                 ? displayPath.TargetInfo.ModeInfoIndex
+                                 : displayPath.TargetInfo.TargetModeInfoIndex
+                         ) is uint alternateTargetModeIndex)
+                {
+                    targetMode = displayModes[alternateTargetModeIndex].TargetMode;
+                }
 
                 DisplayConfigDesktopImageInfo? desktopImageMode = null;
 
@@ -915,6 +940,29 @@ namespace WindowsDisplayAPI.DisplayConfig
             return pathInfos.Select(
                 pair => new PathInfo(pair.Value.Item1, pair.Value.Item2, pair.Value.Item3)
             ).ToArray();
+        }
+
+        private static uint? FindModeIndex(
+            DisplayConfigModeInfo[] displayModes,
+            DisplayConfigModeInfoType infoType,
+            LUID adapterId,
+            uint id,
+            uint modeIndex
+        )
+        {
+            if (modeIndex >= displayModes.Length)
+            {
+                return null;
+            }
+
+            var modeInfo = displayModes[modeIndex];
+
+            if (modeInfo.InfoType != infoType || modeInfo.AdapterId != adapterId || modeInfo.Id != id)
+            {
+                return null;
+            }
+
+            return modeIndex;
         }
 
         /// <inheritdoc />
