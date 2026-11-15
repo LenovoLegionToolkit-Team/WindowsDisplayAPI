@@ -824,6 +824,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                     >
                 >();
 
+            var isVirtualModeAware = flags.HasFlag(QueryDeviceConfigFlags.VirtualModeAware);
             var sourceId = uint.MaxValue;
 
             for (var i = 0u; i < pathCount; i++)
@@ -831,10 +832,8 @@ namespace WindowsDisplayAPI.DisplayConfig
                 var displayPath = displayPaths[i];
                 DisplayConfigSourceMode? sourceMode = null;
                 var key = sourceId;
-                var isVirtualSupported = displayPath.Flags.HasFlag(DisplayConfigPathInfoFlags.SupportVirtualMode) ||
-                                         displayPath.Flags.HasFlag(DisplayConfigPathInfoFlags.BoostRefreshRate);
 
-                if (isVirtualSupported &&
+                if (isVirtualModeAware &&
                     displayPath.SourceInfo.SourceModeInfoIndex != DisplayConfigSourceMode.InvalidSourceModeIndex &&
                     displayPath.SourceInfo.SourceModeInfoIndex < displayModes.Length &&
                     displayModes[displayPath.SourceInfo.SourceModeInfoIndex].InfoType ==
@@ -843,7 +842,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                     sourceMode = displayModes[displayPath.SourceInfo.SourceModeInfoIndex].SourceMode;
                     key = displayPath.SourceInfo.SourceModeInfoIndex;
                 }
-                else if (!isVirtualSupported &&
+                else if (!isVirtualModeAware &&
                          displayPath.SourceInfo.ModeInfoIndex != DisplayConfigModeInfo.InvalidModeIndex &&
                          displayPath.SourceInfo.ModeInfoIndex < displayModes.Length &&
                          displayModes[displayPath.SourceInfo.ModeInfoIndex].InfoType ==
@@ -857,7 +856,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                              DisplayConfigModeInfoType.Source,
                              displayPath.SourceInfo.AdapterId,
                              displayPath.SourceInfo.SourceId,
-                             isVirtualSupported
+                             isVirtualModeAware
                                  ? displayPath.SourceInfo.ModeInfoIndex
                                  : displayPath.SourceInfo.SourceModeInfoIndex
                          ) is uint alternateSourceModeIndex)
@@ -891,7 +890,7 @@ namespace WindowsDisplayAPI.DisplayConfig
 
                 DisplayConfigTargetMode? targetMode = null;
 
-                if (isVirtualSupported &&
+                if (isVirtualModeAware &&
                     displayPath.TargetInfo.TargetModeInfoIndex != DisplayConfigTargetMode.InvalidTargetModeIndex &&
                     displayPath.TargetInfo.TargetModeInfoIndex < displayModes.Length &&
                     displayModes[displayPath.TargetInfo.TargetModeInfoIndex].InfoType == DisplayConfigModeInfoType.Target
@@ -899,7 +898,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                 {
                     targetMode = displayModes[displayPath.TargetInfo.TargetModeInfoIndex].TargetMode;
                 }
-                else if (!isVirtualSupported &&
+                else if (!isVirtualModeAware &&
                          displayPath.TargetInfo.ModeInfoIndex != DisplayConfigModeInfo.InvalidModeIndex &&
                          displayPath.TargetInfo.ModeInfoIndex < displayModes.Length &&
                          displayModes[displayPath.TargetInfo.ModeInfoIndex].InfoType == DisplayConfigModeInfoType.Target
@@ -912,7 +911,7 @@ namespace WindowsDisplayAPI.DisplayConfig
                              DisplayConfigModeInfoType.Target,
                              displayPath.TargetInfo.AdapterId,
                              displayPath.TargetInfo.TargetId,
-                             isVirtualSupported
+                             isVirtualModeAware
                                  ? displayPath.TargetInfo.ModeInfoIndex
                                  : displayPath.TargetInfo.TargetModeInfoIndex
                          ) is uint alternateTargetModeIndex)
@@ -922,7 +921,7 @@ namespace WindowsDisplayAPI.DisplayConfig
 
                 DisplayConfigDesktopImageInfo? desktopImageMode = null;
 
-                if (isVirtualSupported &&
+                if (isVirtualModeAware &&
                     displayPath.TargetInfo.DesktopModeInfoIndex !=
                     DisplayConfigDesktopImageInfo.InvalidDesktopImageModeIndex &&
                     displayPath.TargetInfo.DesktopModeInfoIndex < displayModes.Length &&
